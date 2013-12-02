@@ -1,0 +1,8 @@
+/Source/Appboy.NET/bin
+/Source/Appboy.NET/obj
+/Source/Appboy.NET.Example/bin
+
+/Source/Appboy.NET.Example/obj
+*.user
+/Source/*.suo
+/Source/packages
