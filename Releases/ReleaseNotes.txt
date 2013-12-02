@@ -1,0 +1,10 @@
+Version 0.3.1
+=============
+- Added ability to send out requests synchronously (allows for easier support for batching)
+
+
+Version 0.3
+===========
+- Added functionality to upload User Attributes and push notification tokens
+- Added data integrity/validation of submitted data
+- Added custom error handling against the Appboy API
