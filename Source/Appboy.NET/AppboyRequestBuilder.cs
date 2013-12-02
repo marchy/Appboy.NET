@@ -25,6 +25,7 @@ namespace Appboy.NET {
 		private readonly string _companySecret;
 		private readonly string _appGroupID;
 		private readonly List<UserAttributes> _userAttributes;
+		private RestClient _restClient;
 
 		#endregion
 		
@@ -43,7 +44,8 @@ namespace Appboy.NET {
 			_appGroupID = appGroupID;
 
 			_userAttributes = new List<UserAttributes>();
-//			Contract.Ensures( _usersToAdd != null );
+
+			_restClient = new RestClient( BaseEndpointURL );
 		}
 
 		#endregion
@@ -102,6 +104,20 @@ namespace Appboy.NET {
 		}
 
 
+		public void SendData( Action<ImportResult> onSuccess, Action<Exception> onError ){
+			Contract.Requires( onSuccess != null );
+			Contract.Requires( onError != null );
+			if( onSuccess == null )
+				throw new ArgumentNullException( "onSuccess" );
+			if( onError == null )
+				throw new ArgumentNullException( "onError" );
+
+			var request = PrepareRequest();
+			var response = _restClient.Execute( request );
+			ProcessResponse( response, onSuccess, onError );
+		}
+
+
 		public void SendDataAsync( Action<ImportResult> onSuccess, Action<Exception> onError ){
 			Contract.Requires( onSuccess != null );
 			Contract.Requires( onError != null );
@@ -110,7 +126,19 @@ namespace Appboy.NET {
 			if( onError == null )
 				throw new ArgumentNullException( "onError" );
 
-			var restClient = new RestClient( BaseEndpointURL );
+			var request = PrepareRequest();
+			_restClient.ExecuteAsyncPost(
+				request,
+				(response, handle) => ProcessResponse( response, onSuccess, onError )
+				, Method.POST.ToString() );
+		}
+
+		#endregion
+		
+
+		#region private methods
+
+		private RestRequest PrepareRequest() {
 			var request = new RestRequest( UserTrackingEndpointPath, Method.POST ){
 				RequestFormat = DataFormat.Json,
 				JsonSerializer = new JsonSerializer()
@@ -121,75 +149,64 @@ namespace Appboy.NET {
 				Attributes = _userAttributes,
 			};
 			request.AddBody( appboyRequest );
-			restClient.ExecuteAsyncPost( request, ( response, handle ) => {
-				// TODO: handler success and error scenarios. Call callbacks accordingly
-				if( response.ErrorException != null ){
-					// TODO: parse error message if needed (is it made up of JSON content or a simple string?)
 
-					onError( new Exception( response.ErrorMessage ));
-				}
-
-				// process result
-				dynamic responseJSON;
-				string message;
-				switch( response.StatusCode ){
-					case HttpStatusCode.OK:
-					case HttpStatusCode.Created:
-						break;
-
-					// NOTE: This may not be necessary if the client library is coded properly. But here just in case!
-					case HttpStatusCode.BadRequest:
-						responseJSON = JObject.Parse( response.Content );
-						message = responseJSON.message;
-						onError( new InvalidDataException( message ));
-							
-						return;
-
-					case HttpStatusCode.Unauthorized:
-						responseJSON = JObject.Parse( response.Content );
-						message = responseJSON.message;
-						onError( new AuthenticationException( message ));
-
-						return;
-
-					case HttpStatusCode.NotFound:
-						responseJSON = JObject.Parse( response.Content );
-						message = responseJSON.message;
-						onError( new KeyNotFoundException( message ));
-
-						return;
-
-					case (HttpStatusCode)429:
-						responseJSON = JObject.Parse( response.Content );
-						message = responseJSON.message;
-						onError( new IndexOutOfRangeException( message ));
-
-						return;
-
-					default:
-						throw new Exception( response.ErrorMessage );
-				}
-
-				// TODO: parse response
-//				var responseJSON = JsonConvert.DeserializeObject( response.Content );
-				ImportResult importResult = JsonConvert.DeserializeObject<ImportResult>( response.Content );
-//				var responseJSON3 = JObject.Parse( response.Content );
-
-//				var responseJSON = JsonConvert.DeserializeObject<>(  )
-				// TODO: model success object (needs to include non-fatal errors)
- 				onSuccess( importResult );
-
-			}, Method.POST.ToString() );
+			return request;
 		}
 
-		#endregion
-		
 
-		#region private methods
+		private static void ProcessResponse( IRestResponse response, Action<ImportResult> onSuccess, Action<Exception> onError ){
+			if( response.ErrorException != null ){
+				// TODO: parse error message if needed (is it made up of JSON content or a simple string?)
 
-//		private void ObjectInvariant() {
-//			Contract.Invariant( _usersAttributes != null );
-//		}
+				onError( new Exception( response.ErrorMessage ));
+			}
+
+			// process result
+			dynamic responseJSON;
+			string message;
+			switch( response.StatusCode ){
+				case HttpStatusCode.OK:
+				case HttpStatusCode.Created:
+					break;
+
+					// NOTE: This may not be necessary if the client library is coded properly. But here just in case!
+				case HttpStatusCode.BadRequest:
+					responseJSON = JObject.Parse( response.Content );
+					message = responseJSON.message;
+					onError( new InvalidDataException( message ));
+
+					return;
+
+				case HttpStatusCode.Unauthorized:
+					responseJSON = JObject.Parse( response.Content );
+					message = responseJSON.message;
+					onError( new AuthenticationException( message ));
+
+					return;
+
+				case HttpStatusCode.NotFound:
+					responseJSON = JObject.Parse( response.Content );
+					message = responseJSON.message;
+					onError( new KeyNotFoundException( message ));
+
+					return;
+
+				case (HttpStatusCode)429:
+					responseJSON = JObject.Parse( response.Content );
+					message = responseJSON.message;
+					onError( new IndexOutOfRangeException( message ));
+
+					return;
+
+				default:
+					throw new Exception( response.ErrorMessage );
+			}
+
+			// parse response
+			ImportResult importResult = JsonConvert.DeserializeObject<ImportResult>( response.Content );
+
+			onSuccess( importResult );
+		}
 
 		#endregion
 
