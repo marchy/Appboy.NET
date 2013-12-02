@@ -1,9 +1,9 @@
 Appboy.NET
 ==========
-Appboy.NET is a client library that lets you upload data to the Appboy API. It is a convenience library around the REST API, providing an object model for the API, correct data format / constraints-checking and error handling against the API.
+The Appboy.NET client library lets you upload data to the Appboy REST API. It provides an object model for the API, ensures data integrity/validation and provides error handling specific to the Appboy API.
 
 
-*__NOTE__: Currently the library supports only the functionality for User Attributes (including device push tokens). Event and Purchases is not yet implemented. Feel free to submit a pull request with the functioanlity or [reach out to me](https://github.com/marchy) if you require this functionality and I will do my best to help integrate it.*
+*__NOTE__: Currently the library supports only the functionality for User Attributes (including push notification tokens). Event and Purchases is not yet implemented. Feel free to submit a pull request with the functioanlity or [reach out to me](https://github.com/marchy) if you require this functionality and I will do my best to help integrate it.*
 
 
 Installation
@@ -92,13 +92,14 @@ Implementation Best Practices
 ### Sending out Multiple Requests (Batching)
 The Appboy API limits to sending at most 50 Attributes, Events, or Purchase objects per request. If you need to send more data you will need to split up the requests into multiple batches. The builder pattern helps with this as you can create a new builder instance and it will reuse the credentials provided in the initial setup.
 
-The library provides no support for the actual batching or sending out multiple requests. The simplest way to achieve it is to use the synchronous sending interface (**SendData(..)**) so that every request gets sent after the previous one completes. If you need higher performance you can issue multiple requests asynchronously (**SendDataAsync(..)**), however you will have to provide your own mechanism to ensure you don't kick off too many requests at once. This is outside the scope of the library, and you should carefully consider how and whether you should be sending loads of out to the API. There is an API limit of [2000 requests per hour](http://documentation.appboy.com/external-api-custom-event.html#external-apis).
+The library provides no support for the actual batching or sending out multiple requests. The simplest way to achieve it is to use the synchronous sending interface (**SendData(..)**) so that every request gets sent after the previous one completes. If you need higher performance you can issue multiple requests asynchronously (**SendDataAsync(..)**), however you will have to provide your own mechanism (such as semaphores / countdown latches in your consuming callbacks) to ensure you don't kick off too many requests at once. This is outside the scope of the library, and you should carefully consider how and whether you should be sending loads of data out to the API in the first place. Please note there is an API limit of [2000 requests per hour](http://documentation.appboy.com/external-api-custom-event.html#external-apis).
 
 
 
 
-Roadmap / Feature Requests
+Roadmap
 --------------------------
-* Support for synchronous data sending. This should make working with multiple batches simpler if you don't want to multi-thread them (ie: send out multiple requests at once).
 * Support for Events
 * Support for Purchases
+
+Feel free to [reach out to me](https://github.com/marchy) if you require this functionality and/or need help creating a pull request for it. Cheers!
