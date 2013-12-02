@@ -3,7 +3,7 @@ Appboy.NET
 The Appboy.NET client library lets you upload data to the Appboy REST API. It provides an object model for the API, ensures data integrity/validation and provides error handling specific to the Appboy API.
 
 
-*__NOTE__: Currently the library supports only the functionality for User Attributes (including push notification tokens). Event and Purchases is not yet implemented. Feel free to submit a pull request with the functioanlity or [reach out to me](https://github.com/marchy) if you require this functionality and I will do my best to help integrate it.*
+*__NOTE__: Currently the library supports only the functionality for core and custom User Attributes (including push notification tokens). Social attributes, Events and Purchases are not yet implemented. Feel free to submit a pull request with the functioanlity or [reach out to me](https://github.com/marchy) if you require this functionality and I will do my best to help integrate it.*
 
 
 Installation
@@ -99,6 +99,7 @@ The library provides no support for the actual batching or sending out multiple 
 
 Roadmap
 --------------------------
+* Social attributes (Facebook, Twitter, Foursquare)
 * Support for Events
 * Support for Purchases
 
